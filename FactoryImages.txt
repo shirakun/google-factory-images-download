@@ -727,6 +727,9 @@ https://dl.google.com/dl/android/aosp/crosshatch-sp1a.210812.016.b1-factory-9380
 https://dl.google.com/dl/android/aosp/crosshatch-sp1a.210812.016.b2-factory-b2d529d6.zip
 https://dl.google.com/dl/android/aosp/crosshatch-sp1a.210812.016.c1-factory-67ea87fc.zip
 https://dl.google.com/dl/android/aosp/crosshatch-sp1a.210812.016.c2-factory-27f59137.zip
+https://dl.google.com/dl/android/aosp/cubs-cd1a.260618.001.a7-factory-fe27e572.zip
+https://dl.google.com/dl/android/aosp/cubs-cd1a.260618.001.c2-factory-da6598a3.zip
+https://dl.google.com/dl/android/aosp/cubs-cd1a.260714.001.a9-factory-a529c436.zip
 https://dl.google.com/dl/android/aosp/eos-aw2a.241105.012-factory-43614a1a.zip
 https://dl.google.com/dl/android/aosp/eos-aw2a.241105.013-factory-a4464725.zip
 https://dl.google.com/dl/android/aosp/eos-bp1a.250305.019.w3-factory-222bba14.zip
@@ -938,6 +941,10 @@ https://dl.google.com/dl/android/aosp/fugu-nrd91d-factory-60a7d0e5.zip
 https://dl.google.com/dl/android/aosp/fugu-nrd91n-factory-c3105e53.zip
 https://dl.google.com/dl/android/aosp/fugu-opr2.170623.027-factory-d4be396e.zip
 https://dl.google.com/dl/android/aosp/fugu-opr6.170623.021-factory-e34311b0.zip
+https://dl.google.com/dl/android/aosp/goteria-cd5a.260611.008-factory-5df69418.zip
+https://dl.google.com/dl/android/aosp/grizzly-cd1a.260618.001.a7-factory-fcbe9324.zip
+https://dl.google.com/dl/android/aosp/grizzly-cd1a.260618.001.c2-factory-9403b0f6.zip
+https://dl.google.com/dl/android/aosp/grizzly-cd1a.260714.001.a9-factory-86fb8151.zip
 https://dl.google.com/dl/android/aosp/hammerhead-kot49h-factory-3c5d358b.zip
 https://dl.google.com/dl/android/aosp/hammerhead-krt16m-factory-fb4041cc.zip
 https://dl.google.com/dl/android/aosp/hammerhead-ktu84m-factory-9c4610fb.zip
@@ -1026,6 +1033,9 @@ https://dl.google.com/dl/android/aosp/husky-uq1a.240105.004.a1-factory-c0df8be8.
 https://dl.google.com/dl/android/aosp/husky-uq1a.240205.004-factory-594e3ca4.zip
 https://dl.google.com/dl/android/aosp/husky-uq1a.240205.004.a1-factory-a74ab18e.zip
 https://dl.google.com/dl/android/aosp/husky-uq1a.240205.004.b1-factory-768b14e2.zip
+https://dl.google.com/dl/android/aosp/kodiak-cd1a.260618.001.a7-factory-ef0c679d.zip
+https://dl.google.com/dl/android/aosp/kodiak-cd1a.260618.001.c2-factory-1b9e03e3.zip
+https://dl.google.com/dl/android/aosp/kodiak-cd1a.260714.001.a9-factory-b8263247.zip
 https://dl.google.com/dl/android/aosp/komodo-ad1a.240530.030-factory-fb963bd6.zip
 https://dl.google.com/dl/android/aosp/komodo-ad1a.240530.030.a1-factory-06b98f68.zip
 https://dl.google.com/dl/android/aosp/komodo-ad1a.240530.030.a2-factory-f3d59301.zip
@@ -2439,3 +2449,6 @@ https://dl.google.com/dl/android/aosp/yakju-imm76i-factory-7e04639e.zip
 https://dl.google.com/dl/android/aosp/yakju-jdq39-factory-6f07b069.zip
 https://dl.google.com/dl/android/aosp/yakju-jwr66y-factory-4cadea65.zip
 https://dl.google.com/dl/android/aosp/yakju-jzo54k-factory-d75228cf.zip
+https://dl.google.com/dl/android/aosp/yogi-cd1a.260618.001.a9-factory-da72a39a.zip
+https://dl.google.com/dl/android/aosp/yogi-cd1a.260618.001.c3-factory-4e0bc28e.zip
+https://dl.google.com/dl/android/aosp/yogi-cd1a.260714.001.a9-factory-0c09a12c.zip

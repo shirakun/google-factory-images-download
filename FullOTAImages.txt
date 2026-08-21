@@ -707,6 +707,9 @@ https://dl.google.com/dl/android/aosp/crosshatch-ota-sp1a.210812.016.b1-fefe0ed6
 https://dl.google.com/dl/android/aosp/crosshatch-ota-sp1a.210812.016.b2-83dc66ed.zip
 https://dl.google.com/dl/android/aosp/crosshatch-ota-sp1a.210812.016.c1-d3a532dd.zip
 https://dl.google.com/dl/android/aosp/crosshatch-ota-sp1a.210812.016.c2-efea980d.zip
+https://dl.google.com/dl/android/aosp/cubs-ota-cd1a.260618.001.a7-7f02515d.zip
+https://dl.google.com/dl/android/aosp/cubs-ota-cd1a.260618.001.c2-4c3f6aae.zip
+https://dl.google.com/dl/android/aosp/cubs-ota-cd1a.260714.001.a9-4834ee9d.zip
 https://dl.google.com/dl/android/aosp/eos-ota-aw2a.241105.012-431df39d.zip
 https://dl.google.com/dl/android/aosp/eos-ota-aw2a.241105.013-88a3ba3b.zip
 https://dl.google.com/dl/android/aosp/eos-ota-bp1a.250305.019.w3-cc7320e3.zip
@@ -906,6 +909,10 @@ https://dl.google.com/dl/android/aosp/fugu-ota-nrd91d-647860d6.zip
 https://dl.google.com/dl/android/aosp/fugu-ota-nrd91n-f340b315.zip
 https://dl.google.com/dl/android/aosp/fugu-ota-opr2.170623.027-401d182e.zip
 https://dl.google.com/dl/android/aosp/fugu-ota-opr6.170623.021-1474ea3b.zip
+https://dl.google.com/dl/android/aosp/goteria-ota-cd5a.260611.008-a9ebeb61.zip
+https://dl.google.com/dl/android/aosp/grizzly-ota-cd1a.260618.001.a7-abbce8a6.zip
+https://dl.google.com/dl/android/aosp/grizzly-ota-cd1a.260618.001.c2-bac4ce22.zip
+https://dl.google.com/dl/android/aosp/grizzly-ota-cd1a.260714.001.a9-68ec73fe.zip
 https://dl.google.com/dl/android/aosp/hammerhead-ota-m4b30x-f2eb90a8.zip
 https://dl.google.com/dl/android/aosp/hammerhead-ota-m4b30z-752c16b1.zip
 https://dl.google.com/dl/android/aosp/hammerhead-ota-mmb29x-13c27a19.zip
@@ -976,6 +983,9 @@ https://dl.google.com/dl/android/aosp/husky-ota-uq1a.240105.004.a1-cf43cb74.zip
 https://dl.google.com/dl/android/aosp/husky-ota-uq1a.240205.004-07ccb6c3.zip
 https://dl.google.com/dl/android/aosp/husky-ota-uq1a.240205.004.a1-75ffdfec.zip
 https://dl.google.com/dl/android/aosp/husky-ota-uq1a.240205.004.b1-40fe0242.zip
+https://dl.google.com/dl/android/aosp/kodiak-ota-cd1a.260618.001.a7-b293170d.zip
+https://dl.google.com/dl/android/aosp/kodiak-ota-cd1a.260618.001.c2-f23df0c5.zip
+https://dl.google.com/dl/android/aosp/kodiak-ota-cd1a.260714.001.a9-a765784f.zip
 https://dl.google.com/dl/android/aosp/komodo-ota-ad1a.240530.030-d76aa699.zip
 https://dl.google.com/dl/android/aosp/komodo-ota-ad1a.240530.030.a1-911531c4.zip
 https://dl.google.com/dl/android/aosp/komodo-ota-ad1a.240530.030.a2-05bc8513.zip
@@ -2201,3 +2211,6 @@ https://dl.google.com/dl/android/aosp/walleye-ota-qq3a.200805.001-d5ccdd9c.zip
 https://dl.google.com/dl/android/aosp/walleye-ota-rp1a.200720.009-90cc52a4.zip
 https://dl.google.com/dl/android/aosp/walleye-ota-rp1a.201005.004-6efaff49.zip
 https://dl.google.com/dl/android/aosp/walleye-ota-rp1a.201005.004.a1-ccd1069b.zip
+https://dl.google.com/dl/android/aosp/yogi-ota-cd1a.260618.001.a9-8a6c8928.zip
+https://dl.google.com/dl/android/aosp/yogi-ota-cd1a.260618.001.c3-6618b541.zip
+https://dl.google.com/dl/android/aosp/yogi-ota-cd1a.260714.001.a9-922b48f1.zip
