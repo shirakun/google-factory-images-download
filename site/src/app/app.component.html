@@ -72,9 +72,38 @@
                       }
                     </td>
                     <td>
-                      @for (url of getUrls(entry); track url; let i = $index) {
-                        <a [href]="url" rel="noopener noreferrer">{{ getFilename(url) }}</a>
-                        @if (i < getUrls(entry).length - 1) { <br> }
+                      @if (isSharded(entry)) {
+                        <div class="merge-actions">
+                          <button
+                            type="button"
+                            class="merge-download-btn"
+                            (click)="startMergedDownload(item[0], entry)"
+                          >Download full image</button>
+                          <a class="native-merge-link" [href]="getMergeApiUrl(item[0], entry)">Browser download</a>
+                        </div>
+                        <details class="part-links">
+                          <summary>Show individual parts</summary>
+                          @for (url of getUrls(entry); track url; let i = $index) {
+                            <a [href]="url" rel="noopener noreferrer">{{ getFilename(url) }}</a>
+                            @if (i < getUrls(entry).length - 1) { <br> }
+                          }
+                          <div class="merge-command-block" aria-label="Manual merge commands">
+                            <p>After downloading every part, merge locally:</p>
+                            <pre>{{ getBashMergeCommand(entry) }}</pre>
+                            <button type="button" class="copy-command-btn" (click)="copyMergeCommand(entry, 'bash')">
+                              {{ copiedCommand() === copiedCommandKey(entry, 'bash') ? 'Copied!' : 'Copy macOS/Linux command' }}
+                            </button>
+                            <pre>{{ getPowerShellMergeCommand(entry) }}</pre>
+                            <button type="button" class="copy-command-btn" (click)="copyMergeCommand(entry, 'powershell')">
+                              {{ copiedCommand() === copiedCommandKey(entry, 'powershell') ? 'Copied!' : 'Copy Windows command' }}
+                            </button>
+                          </div>
+                        </details>
+                      } @else {
+                        @for (url of getUrls(entry); track url; let i = $index) {
+                          <a [href]="url" rel="noopener noreferrer">{{ getFilename(url) }}</a>
+                          @if (i < getUrls(entry).length - 1) { <br> }
+                        }
                       }
                     </td>
                     <td>
@@ -109,6 +138,8 @@
   </aside>
 
 </div>
+
+<app-merge-task-card />
 
 <!-- Task 4.9: footer outside page-shell -->
 <footer>

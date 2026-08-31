@@ -16,6 +16,9 @@ on:
       - 'FullOTAImages.txt'
       - 'FirmwareMetadata.json'
       - 'site/src/**'
+      - 'site/functions/**'
+      - 'site/pages-routes.json'
+      - 'site/wrangler.jsonc'
       - 'site/device-release-dates.json'
       - 'site/package.json'
       - 'site/package-lock.json'
@@ -63,12 +66,16 @@ jobs:
       - name: Build Angular app
         run: cd site && npx ng build --base-href /
 
+      - name: Restrict Pages Functions routes
+        run: cp site/pages-routes.json site/dist/browser/_routes.json
+
       - name: Deploy to Cloudflare Pages
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: 3356b375fc065b5e04b0827a1c06d8f1
         run: |
-          npx wrangler pages deploy site/dist/browser \
+          cd site
+          npx wrangler pages deploy dist/browser \
             --project-name google-firmware-browser \
             --branch master \
             --commit-dirty=true

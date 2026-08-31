@@ -1,0 +1,43 @@
+@if (isVisible()) {
+  <aside class="merge-task-card" [ngClass]="statusClass()" aria-live="polite" aria-label="Firmware download task">
+    <div class="merge-task-header">
+      <strong>Downloads</strong>
+      @if (canClear()) {
+        <button type="button" class="icon-btn" aria-label="Dismiss download status" (click)="downloader.clear()">×</button>
+      }
+    </div>
+
+    <div class="merge-task-body">
+      <p class="merge-file-name" [title]="downloader.task().fileName">{{ downloader.task().fileName }}</p>
+      <p class="merge-message">{{ downloader.task().message }}</p>
+
+      <div
+        class="merge-progress"
+        role="progressbar"
+        [attr.aria-valuemin]="0"
+        [attr.aria-valuemax]="100"
+        [attr.aria-valuenow]="downloader.task().progressPercent === null ? null : progressValue()"
+      >
+        <span [style.width.%]="downloader.task().progressPercent ?? 100"></span>
+      </div>
+
+      <p class="merge-meta">
+        {{ downloader.formatBytes(downloader.task().bytesReceived) }}
+        @if (downloader.task().totalBytes !== null) {
+          <span> / {{ downloader.formatBytes(downloader.task().totalBytes) }}</span>
+        }
+        @if (downloader.task().speedBytesPerSecond > 0) {
+          <span> · {{ downloader.formatBytes(downloader.task().speedBytesPerSecond) }}/s</span>
+        }
+      </p>
+
+      @if (downloader.task().error) {
+        <p class="merge-error">{{ downloader.task().error }}</p>
+      }
+
+      @if (canCancel()) {
+        <button type="button" class="text-btn" (click)="downloader.cancel()">Cancel</button>
+      }
+    </div>
+  </aside>
+}

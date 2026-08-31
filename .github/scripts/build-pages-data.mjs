@@ -5,7 +5,7 @@
 //   .github/scripts/extract-changed-devices.sh
 //   .github/scripts/publish-firmware.sh
 //   .github/scripts/update-url-lists.sh
-import { readFileSync, writeFileSync, renameSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, renameSync, existsSync, mkdirSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -85,8 +85,8 @@ export function parseUrlFile(content, regex, label) {
 }
 
 // Queries GitHub Releases and builds a map of part URLs for sharded firmware entries.
-// Returns Map<"device:type:buildId", string[]> where each value is an ordered array
-// of .partNN URLs followed by the .sha256 manifest URL (manifest always last).
+// Returns Map<"device:type:buildId", {urls, fileName, parts, expectedSize, manifestUrl}>.
+// urls preserves the public data.json shape: .partNN URLs followed by the .sha256 manifest URL.
 // Returns an empty Map when GITHUB_REPOSITORY is not set or the API is unreachable.
 export async function fetchPartUrlMap(repo) {
   if (!repo) return new Map();
@@ -117,7 +117,7 @@ export async function fetchPartUrlMap(repo) {
       const buildIdRe = type === 'factory' ? buildIdReFactory : buildIdReOta;
 
       // Group assets by their base filename (the .zip stem before .partNN/.sha256)
-      const groups = new Map(); // base → { parts: [{n, url}], manifest: url|null }
+      const groups = new Map(); // base → { parts: [{n, url, size, name}], manifest: {url, size, name}|null }
       for (const asset of rel.assets) {
         const pm = asset.name.match(partRe);
         if (!pm) continue;
@@ -125,9 +125,14 @@ export async function fetchPartUrlMap(repo) {
         if (!groups.has(base)) groups.set(base, { parts: [], manifest: null });
         const g = groups.get(base);
         if (pm[2] === 'sha256') {
-          g.manifest = asset.browser_download_url;
+          g.manifest = { url: asset.browser_download_url, size: asset.size ?? 0, name: asset.name };
         } else {
-          g.parts.push({ n: parseInt(pm[3], 10), url: asset.browser_download_url });
+          g.parts.push({
+            n: parseInt(pm[3], 10),
+            url: asset.browser_download_url,
+            size: asset.size ?? 0,
+            name: asset.name,
+          });
         }
       }
 
@@ -137,7 +142,13 @@ export async function fetchPartUrlMap(repo) {
         if (!bm) continue;
         const buildId = bm[1];
         parts.sort((a, b) => a.n - b.n);
-        map.set(`${device}:${type}:${buildId}`, [...parts.map(p => p.url), manifest]);
+        map.set(`${device}:${type}:${buildId}`, {
+          urls: [...parts.map(p => p.url), manifest.url],
+          fileName: base,
+          parts,
+          expectedSize: parts.reduce((sum, p) => sum + (Number.isFinite(p.size) ? p.size : 0), 0),
+          manifestUrl: manifest.url,
+        });
       }
     }
     if (releases.length < 100) break;
@@ -164,7 +175,8 @@ function buildGitHubReleaseUrl(repo, device, type, filename) {
 // Builds the data.json output object from parsed entries + name map.
 // repo: GITHUB_REPOSITORY value; when set, constructs GitHub Release URLs deterministically.
 // partUrlMap: Map from fetchPartUrlMap — sharded entries get array of part+manifest URLs.
-export function buildOutput(factoryEntries, otaEntries, nameMap, meta = {}, repo = '', partUrlMap = new Map(), metadataMap = new Map()) {
+// allowlist: Map mutated with entries safe for the same-origin merge Function.
+export function buildOutput(factoryEntries, otaEntries, nameMap, meta = {}, repo = '', partUrlMap = new Map(), metadataMap = new Map(), allowlist = new Map()) {
   const devices = {};
 
   const makeEntry = (device, type, buildId, googleUrl) => {
@@ -176,7 +188,16 @@ export function buildOutput(factoryEntries, otaEntries, nameMap, meta = {}, repo
     if (!repo) return [buildId, googleUrl, checksum, flashUrl];
     const key = `${device}:${type}:${buildId}`;
     if (partUrlMap.has(key)) {
-      return [buildId, partUrlMap.get(key), checksum, flashUrl];
+      const shard = partUrlMap.get(key);
+      allowlist.set(key, {
+        fileName: shard.fileName,
+        parts: shard.parts,
+        expectedSize: shard.expectedSize,
+        expectedSha256: checksum,
+        manifestUrl: shard.manifestUrl,
+        originalUrl: googleUrl,
+      });
+      return [buildId, shard.urls, checksum, flashUrl];
     }
     const filename = googleUrl.split('/').pop();
     return [buildId, buildGitHubReleaseUrl(repo, device, type, filename), checksum, flashUrl];
@@ -222,6 +243,26 @@ export function buildOutput(factoryEntries, otaEntries, nameMap, meta = {}, repo
   };
 }
 
+function writeAllowlist(jsonPath, modulePath, allowlist) {
+  const object = Object.fromEntries([...allowlist.entries()].sort(([a], [b]) => a.localeCompare(b)));
+  mkdirSync(dirname(jsonPath), { recursive: true });
+  const json = JSON.stringify(object, null, 2) + '\n';
+
+  const jsonTmp = jsonPath + '.tmp';
+  writeFileSync(jsonTmp, json);
+  JSON.parse(readFileSync(jsonTmp, 'utf8'));
+  renameSync(jsonTmp, jsonPath);
+
+  const moduleTmp = modulePath + '.tmp';
+  writeFileSync(moduleTmp,
+    '// Generated by .github/scripts/build-pages-data.mjs. Do not edit by hand.\n' +
+    `export const FIRMWARE_ALLOWLIST = ${json};\n`
+  );
+  renameSync(moduleTmp, modulePath);
+
+  console.log(`[INFO] Wrote ${jsonPath}: ${allowlist.size} sharded entries`);
+}
+
 // ── Entry point ─────────────────────────────────────────────────────────────
 
 async function main() {
@@ -232,10 +273,12 @@ async function main() {
     ota:     resolve(repoRoot, 'FullOTAImages.txt'),
     names:   resolve(repoRoot, 'site', 'device-names.json'),
     out:     resolve(repoRoot, 'site', 'data.json'),
+    allowlistJson: resolve(repoRoot, 'site', 'functions', '_lib', 'firmware-allowlist.json'),
+    allowlistModule: resolve(repoRoot, 'site', 'functions', '_lib', 'firmware-allowlist.js'),
   };
 
   for (const [key, p] of Object.entries(paths)) {
-    if (key === 'out') continue;
+    if (key === 'out' || key === 'allowlistJson' || key === 'allowlistModule') continue;
     if (!existsSync(p)) { console.error(`[FATAL] Missing: ${p}`); process.exit(1); }
   }
 
@@ -252,9 +295,10 @@ async function main() {
   } else {
     console.warn('[WARN] FirmwareMetadata.json not found — checksum and Flash data will be null');
   }
+  const allowlist = new Map();
   const output = buildOutput(factoryEntries, otaEntries, nameMap, {
     sourceRevision: process.env.GITHUB_SHA ?? 'local',
-  }, repo, partUrlMap, metadataMap);
+  }, repo, partUrlMap, metadataMap, allowlist);
 
   // Warn for any device codename that has no release date entry.
   const releaseDatesPath = resolve(repoRoot, 'site', 'device-release-dates.json');
@@ -276,6 +320,7 @@ async function main() {
   writeFileSync(tmp, JSON.stringify(output));
   JSON.parse(readFileSync(tmp, 'utf8')); // verify round-trip parse succeeds
   renameSync(tmp, paths.out);
+  writeAllowlist(paths.allowlistJson, paths.allowlistModule, allowlist);
 
   const { devices: dc, factory: fc, ota: oc } = output.counts;
   console.log(`[INFO] Wrote ${paths.out}: ${dc} devices, ${fc} factory, ${oc} OTA`);
@@ -284,7 +329,8 @@ async function main() {
   if (summary) {
     writeFileSync(summary,
       `## data.json build\n| Metric | Count |\n|---|---|\n` +
-      `| Devices | ${dc} |\n| Factory URLs | ${fc} |\n| OTA URLs | ${oc} |\n`,
+      `| Devices | ${dc} |\n| Factory URLs | ${fc} |\n| OTA URLs | ${oc} |\n` +
+      `| Sharded merge entries | ${allowlist.size} |\n`,
       { flag: 'a' });
   }
 }

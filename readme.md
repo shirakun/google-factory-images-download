@@ -36,11 +36,13 @@ Each device/type combination has a dedicated GitHub Release:
 - Tag format: `firmware-{codename}-{factory|ota}`
 - Files exceeding GitHub's 2 GB asset limit are split into `.partNN` files with a `.sha256` manifest
 
-**To reassemble split files:**
+**To reassemble split files manually:**
 ```bash
 cat <filename>.part* > <filename>
 sha256sum --check <filename>.sha256
 ```
+
+The Firmware Browser also offers a **Download full image** action for sharded releases when the Cloudflare Pages merge Function has an allowlisted shard set. Chromium-based browsers stream the merged file directly to disk and verify SHA-256 when metadata is available; other browsers fall back to the native download manager. The original `.partNN` links and manifest remain available under **Show individual parts** for manual recovery.
 
 ## Setup
 
