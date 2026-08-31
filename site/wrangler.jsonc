@@ -3,9 +3,5 @@
   "name": "google-firmware-browser",
   "compatibility_date": "2026-08-31",
   "compatibility_flags": ["nodejs_compat"],
-  "pages_build_output_dir": "./dist/browser",
-  "observability": {
-    "enabled": true,
-    "head_sampling_rate": 0.1
-  }
+  "pages_build_output_dir": "./dist/browser"
 }
