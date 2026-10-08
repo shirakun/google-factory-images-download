@@ -113,6 +113,7 @@ https://dl.google.com/dl/android/aosp/aurora-bp4a.251205.005.w7-factory-333fb9db
 https://dl.google.com/dl/android/aosp/aurora-bw1a.250605.004-factory-8d5c166d.zip
 https://dl.google.com/dl/android/aosp/aurora-cp1a.260305.014.w2-factory-2d856ad6.zip
 https://dl.google.com/dl/android/aosp/aurora-cp2a.260603.001.s1-factory-49ee5098.zip
+https://dl.google.com/dl/android/aosp/aurora-cp3a.260905.002.e1-factory-9a912c2b.zip
 https://dl.google.com/dl/android/aosp/aurora-twd6.230602.036-factory-4157f0b9.zip
 https://dl.google.com/dl/android/aosp/aurora-twd9.231005.005.b1-factory-2f70c228.zip
 https://dl.google.com/dl/android/aosp/aurora-twd9.231205.001-factory-e2fe353b.zip
@@ -756,6 +757,7 @@ https://dl.google.com/dl/android/aosp/eos-bw1a.250605.004-factory-2a16df77.zip
 https://dl.google.com/dl/android/aosp/eos-bw1a.250605.004.j2-factory-c219c9cd.zip
 https://dl.google.com/dl/android/aosp/eos-cp1a.260305.014.w4-factory-d3801624.zip
 https://dl.google.com/dl/android/aosp/eos-cp2a.260603.001-factory-83e281eb.zip
+https://dl.google.com/dl/android/aosp/eos-cp3a.260905.002.e1-factory-b4cbcb35.zip
 https://dl.google.com/dl/android/aosp/eos-twd6.230602.040-factory-804296eb.zip
 https://dl.google.com/dl/android/aosp/eos-twd6.230602.040.a1-factory-b5e37d31.zip
 https://dl.google.com/dl/android/aosp/eos-twd9.231005.005.b1-factory-f1fc7762.zip
@@ -961,6 +963,7 @@ https://dl.google.com/dl/android/aosp/fugu-nrd91n-factory-c3105e53.zip
 https://dl.google.com/dl/android/aosp/fugu-opr2.170623.027-factory-d4be396e.zip
 https://dl.google.com/dl/android/aosp/fugu-opr6.170623.021-factory-e34311b0.zip
 https://dl.google.com/dl/android/aosp/goteria-cd5a.260611.008-factory-5df69418.zip
+https://dl.google.com/dl/android/aosp/goteria-cp3a.260905.002-factory-1b0a6262.zip
 https://dl.google.com/dl/android/aosp/grizzly-cd1a.260618.001.a7-factory-fcbe9324.zip
 https://dl.google.com/dl/android/aosp/grizzly-cd1a.260618.001.c2-factory-9403b0f6.zip
 https://dl.google.com/dl/android/aosp/grizzly-cd1a.260714.001.a9-factory-86fb8151.zip
@@ -1278,11 +1281,13 @@ https://dl.google.com/dl/android/aosp/menari_btwifi-bd5a.250325.166.a1-factory-e
 https://dl.google.com/dl/android/aosp/menari_btwifi-bp4a.251205.005.w7-factory-a0b65e54.zip
 https://dl.google.com/dl/android/aosp/menari_btwifi-cp1a.260305.014.w2-factory-61b20cd2.zip
 https://dl.google.com/dl/android/aosp/menari_btwifi-cp2a.260603.001.s1-factory-afc3f5c3.zip
+https://dl.google.com/dl/android/aosp/menari_btwifi-cp3a.260905.002-factory-4f5e04e6.zip
 https://dl.google.com/dl/android/aosp/menari_lte-bd5a.250325.139.a1-factory-1a3022d5.zip
 https://dl.google.com/dl/android/aosp/menari_lte-bd5a.250325.166.a1-factory-39796322.zip
 https://dl.google.com/dl/android/aosp/menari_lte-bp4a.251205.005.w7-factory-f7a422f9.zip
 https://dl.google.com/dl/android/aosp/menari_lte-cp1a.260305.014.w4-factory-7043463b.zip
 https://dl.google.com/dl/android/aosp/menari_lte-cp2a.260603.001-factory-4e10d715.zip
+https://dl.google.com/dl/android/aosp/menari_lte-cp3a.260905.002-factory-639bc6e0.zip
 https://dl.google.com/dl/android/aosp/mustang-bd1a.250702.001-factory-c37e6f51.zip
 https://dl.google.com/dl/android/aosp/mustang-bd1a.250702.001.a3-factory-25dd8002.zip
 https://dl.google.com/dl/android/aosp/mustang-bd3a.250721.001-factory-0f215a80.zip
@@ -2014,6 +2019,7 @@ https://dl.google.com/dl/android/aosp/seluna-bw1a.250605.004-factory-8fa58438.zi
 https://dl.google.com/dl/android/aosp/seluna-bw1a.250605.004.j2-factory-cd6eaa7a.zip
 https://dl.google.com/dl/android/aosp/seluna-cp1a.260305.014.w4-factory-44d2526b.zip
 https://dl.google.com/dl/android/aosp/seluna-cp2a.260603.001-factory-3d9dfb0e.zip
+https://dl.google.com/dl/android/aosp/seluna-cp3a.260905.002-factory-f290bb74.zip
 https://dl.google.com/dl/android/aosp/shamu-lmy47d-factory-228e9d64.zip
 https://dl.google.com/dl/android/aosp/shamu-lmy47e-factory-9aeac3ca.zip
 https://dl.google.com/dl/android/aosp/shamu-lmy47i-factory-3a0545d8.zip
@@ -2171,6 +2177,7 @@ https://dl.google.com/dl/android/aosp/solios-bp4a.251205.005.w7-factory-a1fc9317
 https://dl.google.com/dl/android/aosp/solios-bw1a.250605.004-factory-0e48dec1.zip
 https://dl.google.com/dl/android/aosp/solios-cp1a.260305.014.w2-factory-1556356b.zip
 https://dl.google.com/dl/android/aosp/solios-cp2a.260603.001.s1-factory-d203665c.zip
+https://dl.google.com/dl/android/aosp/solios-cp3a.260905.002-factory-a05af390.zip
 https://dl.google.com/dl/android/aosp/stallion-bd6a.251031.001.a4-factory-7420a527.zip
 https://dl.google.com/dl/android/aosp/stallion-cp1a.260305.018-factory-0967f30d.zip
 https://dl.google.com/dl/android/aosp/stallion-cp1a.260405.005-factory-3ad1a9c1.zip
