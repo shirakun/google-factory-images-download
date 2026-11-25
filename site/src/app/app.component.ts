@@ -2,9 +2,7 @@ import { Component, OnInit, OnDestroy, signal, computed, effect, afterNextRender
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { DEVICE_RELEASE_DATES, WATCH_CODENAMES, releaseDateKey } from './device-release-dates';
-import { FirmwareMergeService } from './firmware-merge/firmware-merge.service';
-import { buildBashMergeCommand, buildPowerShellMergeCommand } from './firmware-merge/merge-command';
-import { MergeTaskCardComponent } from './firmware-merge/merge-task-card.component';
+import { buildBashMergeCommand, buildPowerShellMergeCommand, getMergedFileName } from './firmware-merge/merge-command';
 
 // Tasks 1.1 – 1.2
 type FirmwareType = 'phone-factory' | 'phone-ota' | 'watch-factory' | 'watch-ota';
@@ -24,6 +22,8 @@ const FIRMWARE_CATEGORIES: ReadonlyArray<FirmwareCategory> = [
 ];
 
 const VALID_TYPES = new Set<string>(FIRMWARE_CATEGORIES.map(c => c.value));
+
+const DOWNLOAD_PROXY_PATH = '/api/firmware-download';
 
 // Schema v1 entries are length-2; schema v2 entries are length-4.
 type LegacyFwEntry   = [string, string | string[]];
@@ -51,7 +51,7 @@ function normEntry(e: FwEntry): EnrichedFwEntry {
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, MergeTaskCardComponent],
+  imports: [CommonModule],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })
@@ -63,19 +63,12 @@ export class AppComponent implements OnInit, OnDestroy {
   // (effect callbacks run reactively, outside injection context; afterNextRender
   // calls assertInInjectionContext when options are omitted — Angular 17.3.12 core.mjs:15193)
   private readonly injector = inject(Injector);
-  readonly mergeDownloader = inject(FirmwareMergeService);
 
   // Tasks 2.1 – 2.2
   data         = signal<DataJson | null>(null);
   firmwareType = signal<FirmwareType>('phone-factory');
   activeDevice = signal<string | null>(null);
   copiedCommand = signal<string | null>(null);
-
-  private readonly beforeUnloadHandler = (event: BeforeUnloadEvent) => {
-    if (!this.mergeDownloader.isActive()) return;
-    event.preventDefault();
-    event.returnValue = '';
-  };
 
   // Task 2.4 – single source of truth for active category descriptor
   private get activeCategory(): FirmwareCategory {
@@ -113,8 +106,6 @@ export class AppComponent implements OnInit, OnDestroy {
 
   // Task 2.5
   ngOnInit(): void {
-    window.addEventListener('beforeunload', this.beforeUnloadHandler);
-
     const typeParam = new URLSearchParams(window.location.search).get('type');
     if (typeParam && VALID_TYPES.has(typeParam)) {
       this.firmwareType.set(typeParam as FirmwareType);
@@ -144,7 +135,6 @@ export class AppComponent implements OnInit, OnDestroy {
 
   // Task 3.6
   ngOnDestroy(): void {
-    window.removeEventListener('beforeunload', this.beforeUnloadHandler);
     this.observer?.disconnect();
   }
 
@@ -185,25 +175,11 @@ export class AppComponent implements OnInit, OnDestroy {
     return entry[3];
   }
 
-  startMergedDownload(codename: string, entry: EnrichedFwEntry): void {
-    if (!this.isSharded(entry)) return;
-    void this.mergeDownloader.start({
-      device: codename,
-      type: this.activeCategory.dataKey,
-      buildId: entry[0],
-      urls: this.getUrls(entry),
-      expectedSha256: this.getChecksum(entry),
-    });
-  }
-
-  getMergeApiUrl(codename: string, entry: EnrichedFwEntry): string {
-    return this.mergeDownloader.buildApiUrl({
-      device: codename,
-      type: this.activeCategory.dataKey,
-      buildId: entry[0],
-      urls: this.getUrls(entry),
-      expectedSha256: this.getChecksum(entry),
-    });
+  // Sharded entries download the unsplit Original image through the proxy.
+  getProxiedDownloadUrl(entry: EnrichedFwEntry): string | null {
+    const filename = getMergedFileName(this.getUrls(entry));
+    if (!filename.endsWith('.zip')) return null;
+    return `${DOWNLOAD_PROXY_PATH}?file=${encodeURIComponent(filename)}`;
   }
 
   getBashMergeCommand(entry: EnrichedFwEntry): string {

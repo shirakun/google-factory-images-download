@@ -74,12 +74,9 @@
                     <td>
                       @if (isSharded(entry)) {
                         <div class="merge-actions">
-                          <button
-                            type="button"
-                            class="merge-download-btn"
-                            (click)="startMergedDownload(item[0], entry)"
-                          >Download full image</button>
-                          <a class="native-merge-link" [href]="getMergeApiUrl(item[0], entry)">Browser download</a>
+                          @if (getProxiedDownloadUrl(entry); as downloadUrl) {
+                            <a class="native-merge-link" [href]="downloadUrl" rel="noopener">Browser download</a>
+                          }
                         </div>
                         <details class="part-links">
                           <summary>Show individual parts</summary>
@@ -138,8 +135,6 @@
   </aside>
 
 </div>
-
-<app-merge-task-card />
 
 <!-- Task 4.9: footer outside page-shell -->
 <footer>

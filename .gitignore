@@ -3,5 +3,6 @@ site/src/assets/data.json
 site/node_modules/
 site/dist/
 site/.angular/
+site/.wrangler/
 
 demo.png
