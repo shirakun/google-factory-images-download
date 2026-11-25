@@ -1,0 +1,9 @@
+# Copy the reference page's structure, not its brand or its gate
+
+**Status**: accepted
+
+The browser is being rebuilt to mirror `developers.google.com/android/images` at the structural level — book nav, article body with intro and callouts, per-device tables, on-this-page rail, devsite-style footer — because that shell is what makes the page read as the official download page. We deliberately stop short of three things: we never use Google's logo or wordmarks (the header carries this project's identifier), we do not reproduce the terms-acceptance gate (the tables are always visible, so no checkbox and no stored consent state), and reused prose keeps a "content adapted from Google developer pages, CC BY 4.0" attribution in the footer.
+
+**Considered options**: a pixel-level clone including Google branding and the consent gate (highest visual fidelity, but it trades on Google's trademark and forces every visitor through a step that only exists for Google's legal reasons); leaving the current bespoke UI and only restyling colours (cheap, but "looks like the official page" was the whole request); inventing a neutral shell that resembles nothing in particular (safe, but unremarkable and no easier to maintain than the devsite layout).
+
+**Consequences**: the header is ours, so the page can never be mistaken for a Google property; the consent gate's absence means the terms warning becomes a static callout and there is no localStorage consent key to migrate later; the attribution line is load-bearing and must not be dropped when the footer is edited; and Google's own redesigns change what "matching" means without touching our data pipeline.

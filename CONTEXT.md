@@ -43,3 +43,11 @@ _Avoid_: join, combine, reassemble
 **Download proxy**:
 A same-origin endpoint that streams an Original image from `dl.google.com` to the browser.
 _Avoid_: worker, reverse proxy, mirror
+
+**Firmware page**:
+One of the four browser views: factory or full OTA, for phones/tablets or for watches. Selected by the `?type=` query parameter.
+_Avoid_: category, tab, section
+
+**Reference page**:
+The Google developer page whose structure the browser mirrors: book nav, article body, per-device tables, on-this-page rail.
+_Avoid_: template, upstream page, original page

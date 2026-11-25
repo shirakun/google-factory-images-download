@@ -1,145 +1,246 @@
-<header>
+<a class="skip-link" href="#center-content">Skip to main content</a>
+
+<header class="site-header">
   <div class="header-inner">
-    <h1>Factory Images &amp; OTA Updates for Nexus and Pixel Devices</h1>
-    <p class="subtitle">Firmware downloads for Pixel phones, tablets, and Pixel Watch wearables</p>
+    <button
+      type="button"
+      class="menu-toggle"
+      aria-controls="book-nav"
+      [attr.aria-expanded]="navOpen()"
+      aria-label="Toggle documentation navigation"
+      (click)="toggleNav()"
+    >
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+    </button>
+
+    <a class="wordmark" href="?type=phone-factory" (click)="onNavClick($event, 'phone-factory')">
+      <svg class="wordmark-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <rect x="2" y="2" width="20" height="20" rx="5" fill="#1a73e8"/>
+        <path d="M12 6.5v7.2M8.6 10.6L12 14l3.4-3.4M7 17.5h10" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      </svg>
+      <span>Firmware Archive</span>
+    </a>
+
+    <div class="header-search" role="search">
+      <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="10.5" cy="10.5" r="6.5" stroke="currentColor" stroke-width="1.8" fill="none"/>
+        <path d="M15.5 15.5L21 21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+      <input
+        type="search"
+        [value]="searchQuery()"
+        (input)="onSearch($event)"
+        placeholder="Search devices or build IDs"
+        aria-label="Search devices or build IDs"
+        autocomplete="off"
+        spellcheck="false"
+      >
+      @if (searchQuery()) {
+        <button type="button" class="search-clear" aria-label="Clear search" (click)="clearSearch()">×</button>
+      }
+    </div>
+
+    <a class="header-link" href="https://github.com/shirakun/google-factory-images-download" target="_blank" rel="noopener">GitHub</a>
   </div>
 </header>
 
-<div class="page-shell">
+<div class="layout">
+  @if (navOpen()) {
+    <div class="nav-backdrop" (click)="closeNav()" aria-hidden="true"></div>
+  }
 
-  <!-- left sidebar: 4 category buttons only, no device list -->
-  <aside class="left-nav" aria-label="Firmware category navigation">
+  <aside class="book-nav" id="book-nav" [class.open]="navOpen()" aria-label="Downloads documentation">
+    <button type="button" class="nav-close" aria-label="Close navigation" (click)="closeNav()">×</button>
+    <p class="nav-group-title">Downloads</p>
     <nav>
       @for (cat of firmwareCategories; track cat.value) {
-        <button
-          class="cat-btn"
+        <a
+          class="nav-link"
           [class.active]="firmwareType() === cat.value"
-          [attr.aria-pressed]="firmwareType() === cat.value"
-          (click)="setFirmwareType(cat.value)"
-        >{{ cat.label }}</button>
+          [href]="'?type=' + cat.value"
+          [attr.aria-current]="firmwareType() === cat.value ? 'page' : null"
+          (click)="onNavClick($event, cat.value)"
+        >{{ cat.label }}</a>
       }
+      <a class="nav-link external" href="https://developers.google.com/android/drivers" target="_blank" rel="noopener">
+        Driver binaries
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M8 16L16 8M9 8h7v7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </svg>
+      </a>
     </nav>
   </aside>
 
-  <!-- Task 4.2 + 4.5 + 4.6 : center content -->
-  <section class="center-content" id="center-content">
+  <main class="article" id="center-content">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="?type=phone-factory" (click)="onNavClick($event, 'phone-factory')">Firmware archive</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <span>Downloads</span>
+      <span class="sep" aria-hidden="true">/</span>
+      <span aria-current="page">{{ copy().crumb }}</span>
+    </nav>
 
-    <!-- Task 4.8: mobile category selector (visible ≤768px only) -->
-    <select
-      class="mobile-cat-select"
-      [value]="firmwareType()"
-      (change)="setFirmwareType($any($event.target).value)"
-      aria-label="选择固件类型"
-    >
-      @for (cat of firmwareCategories; track cat.value) {
-        <option [value]="cat.value">{{ cat.label }}</option>
+    <h1>{{ copy().h1 }}</h1>
+
+    @for (paragraph of copy().intro; track $index) {
+      <p>{{ paragraph }}</p>
+    }
+
+    <aside class="callout note">
+      <p><strong>Note:</strong> {{ copy().note }} <a href="https://source.android.com/docs/setup/reference/build-numbers" target="_blank" rel="noopener">Build numbers, tags, and codenames</a>.</p>
+    </aside>
+
+    <aside class="callout warning">
+      <p><strong>Warning:</strong></p>
+      @for (paragraph of copy().warning; track $index) {
+        <p>{{ paragraph }}</p>
       }
-    </select>
+    </aside>
+
+    <p class="source-hint">
+      For the current update warnings, including bootloader anti-rollback changes, see
+      <a [href]="copy().googleHref" target="_blank" rel="noopener">{{ copy().googleLabel }}</a>.
+    </p>
+
+    @if (searchQuery()) {
+      <div class="search-summary" role="status">
+        <span>{{ searchSummaryText() }}</span>
+        <button type="button" class="link-btn" (click)="clearSearch()">Clear search</button>
+      </div>
+    }
 
     @if (!data()) {
-      <div class="loading" aria-live="polite">Loading firmware data…</div>
+      <p class="loading" aria-live="polite">Loading firmware data…</p>
     }
 
-    @if (data() && filteredDevices().length === 0) {
-      <div class="loading">该分类暂无固件数据。</div>
+    @if (data() && visibleDevices().length === 0) {
+      <p class="loading">
+        @if (searchQuery()) { No builds match this search. }
+        @else { No firmware builds are listed for this page. }
+      </p>
     }
 
-    @if (data()) {
-      @for (item of filteredDevices(); track item[0]) {
-        <section class="device-section" [id]="item[0]">
-          <h2 class="device-heading">{{ item[1].name }}</h2>
+    @for (item of visibleDevices(); track item.codename) {
+      <section class="device-section" [id]="item.codename">
+        <h2>{{ item.device.name }}</h2>
 
-          <div class="table-scroll">
-            <table class="version-table">
-              <caption class="sr-only">{{ item[1].name }} 固件列表</caption>
-              <thead>
+        <div class="table-scroll">
+          <table class="version-table">
+            <caption class="sr-only">{{ item.device.name }} firmware builds</caption>
+            <thead>
+              <tr>
+                <th scope="col">Version</th>
+                <th scope="col">Flash</th>
+                <th scope="col">Download</th>
+                <th scope="col">SHA-256 checksum</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (entry of item.entries; track entry[0]) {
                 <tr>
-                  <th scope="col">Version</th>
-                  <th scope="col">Flash</th>
-                  <th scope="col">Download</th>
-                  <th scope="col">SHA-256 Checksum</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (entry of getDeviceEntries(item[1]); track entry[0]) {
-                  <tr>
-                    <td>{{ entry[0] }}</td>
-                    <td>
-                      @if (getFlashUrl(entry)) {
-                        <a [href]="getFlashUrl(entry)" rel="noopener noreferrer" target="_blank">Flash</a>
-                      } @else {
-                        <span aria-label="not available">—</span>
+                  <td class="version-cell">{{ entry[0] }}</td>
+                  <td>
+                    @if (getFlashUrl(entry); as flashUrl) {
+                      <a [href]="flashUrl" target="_blank" rel="noopener noreferrer">Flash</a>
+                    } @else {
+                      <span class="dash" aria-label="Not available">—</span>
+                    }
+                  </td>
+                  <td>
+                    @if (isSharded(entry)) {
+                      @if (getDownloadUrl(entry); as downloadUrl) {
+                        <a class="download-link" [href]="downloadUrl" rel="noopener">{{ getDownloadLabel(entry) }}</a>
                       }
-                    </td>
-                    <td>
-                      @if (isSharded(entry)) {
-                        <div class="merge-actions">
-                          @if (getProxiedDownloadUrl(entry); as downloadUrl) {
-                            <a class="native-merge-link" [href]="downloadUrl" rel="noopener">Browser download</a>
-                          }
-                        </div>
-                        <details class="part-links">
-                          <summary>Show individual parts</summary>
-                          @for (url of getUrls(entry); track url; let i = $index) {
-                            <a [href]="url" rel="noopener noreferrer">{{ getFilename(url) }}</a>
-                            @if (i < getUrls(entry).length - 1) { <br> }
-                          }
-                          <div class="merge-command-block" aria-label="Manual merge commands">
-                            <p>After downloading every part, merge locally:</p>
-                            <pre>{{ getBashMergeCommand(entry) }}</pre>
-                            <button type="button" class="copy-command-btn" (click)="copyMergeCommand(entry, 'bash')">
-                              {{ copiedCommand() === copiedCommandKey(entry, 'bash') ? 'Copied!' : 'Copy macOS/Linux command' }}
-                            </button>
-                            <pre>{{ getPowerShellMergeCommand(entry) }}</pre>
-                            <button type="button" class="copy-command-btn" (click)="copyMergeCommand(entry, 'powershell')">
-                              {{ copiedCommand() === copiedCommandKey(entry, 'powershell') ? 'Copied!' : 'Copy Windows command' }}
-                            </button>
-                          </div>
-                        </details>
-                      } @else {
-                        @for (url of getUrls(entry); track url; let i = $index) {
+                      <details class="parts">
+                        <summary>Show individual parts</summary>
+                        @for (url of getUrls(entry); track url) {
                           <a [href]="url" rel="noopener noreferrer">{{ getFilename(url) }}</a>
-                          @if (i < getUrls(entry).length - 1) { <br> }
                         }
+                        <div class="merge-block">
+                          <p>After downloading every part, merge them locally:</p>
+                          <pre>{{ getBashMergeCommand(entry) }}</pre>
+                          <button type="button" class="copy-btn" (click)="copyMergeCommand(entry, 'bash')">
+                            {{ copiedCommand() === copiedCommandKey(entry, 'bash') ? 'Copied' : 'Copy macOS/Linux command' }}
+                          </button>
+                          <pre>{{ getPowerShellMergeCommand(entry) }}</pre>
+                          <button type="button" class="copy-btn" (click)="copyMergeCommand(entry, 'powershell')">
+                            {{ copiedCommand() === copiedCommandKey(entry, 'powershell') ? 'Copied' : 'Copy Windows command' }}
+                          </button>
+                        </div>
+                      </details>
+                    } @else {
+                      @if (getDownloadUrl(entry); as downloadUrl) {
+                        <a class="download-link" [href]="downloadUrl" rel="noopener">{{ getDownloadLabel(entry) }}</a>
                       }
-                    </td>
-                    <td>
-                      @if (getChecksum(entry)) {
-                        <span class="checksum-cell">{{ getChecksum(entry) }}</span>
-                      } @else {
-                        <span aria-label="not available">—</span>
-                      }
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-        </section>
-      }
+                    }
+                  </td>
+                  <td>
+                    @if (getChecksum(entry); as checksum) {
+                      <span class="checksum">{{ checksum }}</span>
+                    } @else {
+                      <span class="dash" aria-label="Not available">—</span>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
     }
-  </section>
+  </main>
 
-  <!-- right TOC: buttons to avoid stripping ?type= query param on navigation -->
-  <aside class="right-toc" aria-label="On this page">
+  <aside class="toc" aria-label="On this page">
     <p class="toc-title">On this page</p>
     <nav>
-      @for (item of filteredDevices(); track item[0]) {
+      @for (item of visibleDevices(); track item.codename) {
         <button
+          type="button"
           class="toc-link"
-          (click)="scrollToDevice(item[0])"
-          [attr.aria-current]="activeDevice() === item[0] ? 'location' : null"
-        >{{ item[1].name }}</button>
+          [attr.aria-current]="activeDevice() === item.codename ? 'location' : null"
+          (click)="scrollToDevice(item.codename)"
+        >{{ item.device.name }}</button>
       }
     </nav>
   </aside>
-
 </div>
 
-<!-- Task 4.9: footer outside page-shell -->
-<footer>
-  @if (data()) {
-    <p>{{ data()!.counts.devices }} devices &middot; {{ data()!.counts.factory }} factory &middot; {{ data()!.counts.ota }} OTA &middot; Updated {{ data()!.generatedAt | date:'medium' }}</p>
-  }
-  <p>Source: <a href="https://developers.google.com/android/images" rel="noopener">Google developer pages</a></p>
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-col">
+      <h2>Firmware archive</h2>
+      <a href="https://github.com/shirakun/google-factory-images-download" target="_blank" rel="noopener">GitHub repository</a>
+      <a href="https://github.com/shirakun/google-factory-images-download/releases" target="_blank" rel="noopener">Release mirror</a>
+      <a href="https://github.com/shirakun/google-factory-images-download/issues" target="_blank" rel="noopener">Report an issue</a>
+    </div>
+    <div class="footer-col">
+      <h2>Sources</h2>
+      <a href="https://developers.google.com/android/images" target="_blank" rel="noopener">Factory images</a>
+      <a href="https://developers.google.com/android/ota" target="_blank" rel="noopener">Full OTA images</a>
+      <a href="https://developers.google.com/android/images-watch" target="_blank" rel="noopener">Pixel Watch factory images</a>
+      <a href="https://developers.google.com/android/ota-watch" target="_blank" rel="noopener">Pixel Watch full OTA images</a>
+      <a href="https://developers.google.com/android/drivers" target="_blank" rel="noopener">Driver binaries</a>
+    </div>
+    <div class="footer-col">
+      <h2>Legal</h2>
+      <a href="https://developers.google.com/terms" target="_blank" rel="noopener">Google APIs terms of service</a>
+      <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google privacy policy</a>
+      <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0 license</a>
+    </div>
+  </div>
+  <div class="footer-meta">
+    @if (data()) {
+      <p>
+        {{ data()!.counts.devices }} devices · {{ data()!.counts.factory }} factory builds ·
+        {{ data()!.counts.ota }} OTA builds · Updated {{ data()!.generatedAt | date:'mediumDate' }}
+      </p>
+    }
+    <p>
+      Firmware files are published by Google Inc. Page structure adapted from Google developer pages,
+      licensed <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>.
+      Google and Pixel are trademarks of Google LLC.
+    </p>
+  </div>
 </footer>

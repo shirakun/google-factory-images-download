@@ -4,6 +4,8 @@ Automated archive of Google Pixel and Nexus firmware — factory images, full OT
 
 **[Firmware Browser →](https://google-firmware-browser.pages.dev)**
 
+The browser mirrors the structure of [Google's official factory images page](https://developers.google.com/android/images) — book navigation, per-page intro and warnings, per-device build tables, and an on-this-page rail — under its own branding, in English, with no consent gate blocking the tables. Prose reused from Google is attributed in the footer under CC BY 4.0.
+
 ## How it works
 
 ```
@@ -42,7 +44,7 @@ cat <filename>.part* > <filename>
 sha256sum --check <filename>.sha256
 ```
 
-For sharded releases, **Browser download** streams the unsplit original image from `dl.google.com` through a same-origin Pages Function (`/api/firmware-download`). The proxy forwards `Range` requests, so downloads can resume. The mirrored `.partNN` files and manifest remain available under **Show individual parts** for manual recovery.
+For sharded releases, the **Download** link streams the unsplit original image from `dl.google.com` through a same-origin Pages Function (`/api/firmware-download`). The proxy forwards `Range` requests, so downloads can resume. The mirrored `.partNN` files and manifest remain available under **Show individual parts** for manual recovery.
 
 ## Maintenance
 
