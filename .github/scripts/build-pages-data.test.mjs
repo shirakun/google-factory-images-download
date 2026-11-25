@@ -1,7 +1,7 @@
 // .github/scripts/build-pages-data.test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseDateKey, compareBuildIds, parseUrlFile, buildOutput, fetchPartUrlMap, loadMetadata, FACTORY_RE, OTA_RE } from './build-pages-data.mjs';
+import { parseDateKey, compareBuildIds, parseUrlFile, buildOutput, fetchPartUrlMap, loadMetadata, mergeNameMaps, FACTORY_RE, OTA_RE } from './build-pages-data.mjs';
 import { readFileSync } from 'node:fs';
 import { parseRows } from './scrape-metadata.mjs';
 
@@ -323,6 +323,22 @@ test('buildOutput: omitting metadataMap parameter defaults to empty (backward co
   assert.equal(entry.length, 4);
   assert.equal(entry[2], null);
   assert.equal(entry[3], null);
+});
+
+// ── name map merge ───────────────────────────────────────────────────────────
+
+test('mergeNameMaps: generated names fill gaps', () => {
+  const merged = mergeNameMaps({ cubs: 'Pixel 11' }, {});
+  assert.equal(merged.cubs, 'Pixel 11');
+});
+
+test('mergeNameMaps: curated names override generated duplicates', () => {
+  const merged = mergeNameMaps(
+    { aurora: 'Google Pixel Watch 2 (Bluetooth/Wi-Fi)', cubs: 'Pixel 11' },
+    { aurora: 'Pixel Watch 2 (Bluetooth/Wi-Fi)' },
+  );
+  assert.equal(merged.aurora, 'Pixel Watch 2 (Bluetooth/Wi-Fi)');
+  assert.equal(merged.cubs, 'Pixel 11');
 });
 
 // ── shell/JS regex parity ────────────────────────────────────────────────────

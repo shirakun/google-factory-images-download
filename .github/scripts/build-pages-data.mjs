@@ -170,6 +170,12 @@ function buildGitHubReleaseUrl(repo, device, type, filename) {
   return `https://github.com/${repo}/releases/download/firmware-${device}-${type}/${filename}`;
 }
 
+// Curated names win over scraped ones so hand-corrected labels (for example
+// watch variant suffixes) are not overwritten by Google's shorter headings.
+export function mergeNameMaps(generatedNames, manualNames) {
+  return { ...generatedNames, ...manualNames };
+}
+
 // Builds the data.json output object from parsed entries + name map.
 // repo: GITHUB_REPOSITORY value; when set, constructs GitHub Release URLs deterministically.
 // partUrlMap: Map from fetchPartUrlMap — sharded entries get array of part+manifest URLs.
@@ -270,6 +276,7 @@ async function main() {
     factory: resolve(repoRoot, 'FactoryImages.txt'),
     ota:     resolve(repoRoot, 'FullOTAImages.txt'),
     names:   resolve(repoRoot, 'site', 'device-names.json'),
+    generatedNames: resolve(repoRoot, 'site', 'device-names.generated.json'),
     out:     resolve(repoRoot, 'site', 'data.json'),
     allowlistJson: resolve(repoRoot, 'site', 'functions', '_lib', 'firmware-allowlist.json'),
     allowlistModule: resolve(repoRoot, 'site', 'functions', '_lib', 'firmware-allowlist.js'),
@@ -280,7 +287,16 @@ async function main() {
     if (!existsSync(p)) { console.error(`[FATAL] Missing: ${p}`); process.exit(1); }
   }
 
-  const nameMap        = JSON.parse(readFileSync(paths.names, 'utf8'));
+  const manualNames    = JSON.parse(readFileSync(paths.names, 'utf8'));
+  const generatedNames = existsSync(paths.generatedNames)
+    ? JSON.parse(readFileSync(paths.generatedNames, 'utf8'))
+    : {};
+  const nameMap        = mergeNameMaps(generatedNames, manualNames);
+  if (Object.keys(generatedNames).length > 0) {
+    console.log(`[INFO] device-names.generated.json: ${Object.keys(generatedNames).length} entries (${Object.keys(nameMap).length} after curated overrides)`);
+  } else {
+    console.warn('[WARN] device-names.generated.json not found — only curated names are available');
+  }
   const factoryEntries = parseUrlFile(readFileSync(paths.factory, 'utf8'), FACTORY_RE, 'factory');
   const otaEntries     = parseUrlFile(readFileSync(paths.ota,     'utf8'), OTA_RE,     'ota');
 

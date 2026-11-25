@@ -21,6 +21,7 @@ on:
       - 'site/wrangler.jsonc'
       - 'site/device-release-dates.json'
       - 'site/device-names.json'
+      - 'site/device-names.generated.json'
       - 'site/package.json'
       - 'site/package-lock.json'
       - 'site/angular.json'

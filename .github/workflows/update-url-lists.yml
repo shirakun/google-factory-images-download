@@ -35,7 +35,7 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -- FactoryImages.txt FullOTAImages.txt DriverBinaries.txt FirmwareMetadata.json WatchDevices.txt
+          git add -- FactoryImages.txt FullOTAImages.txt DriverBinaries.txt FirmwareMetadata.json WatchDevices.txt site/device-names.generated.json
           if git diff --cached --quiet; then
             echo "URL lists unchanged, nothing to commit"
             echo "outcome=SKIPPED" >> "$GITHUB_OUTPUT"
@@ -51,13 +51,13 @@ jobs:
           OUTCOME: ${{ steps.commit.outputs.outcome }}
         run: |
           if [[ "${OUTCOME}" == "UPDATED" ]]; then
-            total=$(git diff HEAD~1 HEAD --numstat -- FactoryImages.txt FullOTAImages.txt DriverBinaries.txt FirmwareMetadata.json WatchDevices.txt 2>/dev/null | awk '{sum+=$1} END {print sum+0}')
+            total=$(git diff HEAD~1 HEAD --numstat -- FactoryImages.txt FullOTAImages.txt DriverBinaries.txt FirmwareMetadata.json WatchDevices.txt site/device-names.generated.json 2>/dev/null | awk '{sum+=$1} END {print sum+0}')
             echo "::notice::URL lists updated (+${total} URLs)"
             {
               echo "## ✅ UPDATED (+${total} URLs)"
               echo "| File | Added | Removed |"
               echo "|------|-------|---------|"
-              git diff HEAD~1 HEAD --numstat -- FactoryImages.txt FullOTAImages.txt DriverBinaries.txt FirmwareMetadata.json WatchDevices.txt 2>/dev/null \
+              git diff HEAD~1 HEAD --numstat -- FactoryImages.txt FullOTAImages.txt DriverBinaries.txt FirmwareMetadata.json WatchDevices.txt site/device-names.generated.json 2>/dev/null \
                 | while IFS=$'\t' read -r added deleted file; do
                     echo "| \`${file}\` | +${added} | -${deleted} |"
                   done

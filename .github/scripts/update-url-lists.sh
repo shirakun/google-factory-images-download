@@ -147,6 +147,39 @@ main() {
   atomic_replace "$TMPDIR/drivers.txt" "DriverBinaries.txt"
   atomic_replace "$TMPDIR/watch_devices.txt" "WatchDevices.txt"
 
+  log "Building generated device-name map..."
+  node --input-type=module <<NODEEOF
+import { readFileSync, writeFileSync } from 'node:fs';
+const files = [
+  '$TMPDIR/raw_FactoryImages.html',
+  '$TMPDIR/raw_WatchImages.html',
+  '$TMPDIR/raw_FullOTAImages.html',
+  '$TMPDIR/raw_WatchOTAImages.html',
+];
+const names = {};
+for (const file of files) {
+  let html;
+  try {
+    html = readFileSync(file, 'utf8');
+  } catch (e) {
+    process.stderr.write('[WARN] device names skipped for ' + file + ': ' + e.message + '\\n');
+    continue;
+  }
+  for (const m of html.matchAll(/<h2 id="([a-z0-9._]+)"[^>]*data-text="[^"]*?for ([^"&]+)"/g)) {
+    names[m[1]] = m[2].trim();
+  }
+}
+const sorted = Object.fromEntries(Object.entries(names).sort(([a], [b]) => a.localeCompare(b)));
+if (Object.keys(sorted).length < 50) {
+  console.error('[FATAL] device-names.generated.json: only ' + Object.keys(sorted).length + ' names (expected 50+)');
+  process.exit(1);
+}
+writeFileSync('$TMPDIR/device-names.generated.json', JSON.stringify(sorted, null, 2) + '\\n');
+process.stderr.write('[INFO] device-names.generated.json: ' + Object.keys(sorted).length + ' entries\\n');
+NODEEOF
+
+  atomic_replace "$TMPDIR/device-names.generated.json" "site/device-names.generated.json"
+
   log "Building firmware metadata sidecar..."
   node --input-type=module <<NODEEOF
 import { parseRows } from './.github/scripts/scrape-metadata.mjs';
