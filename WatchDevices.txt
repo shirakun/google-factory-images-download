@@ -1,0 +1,9 @@
+aurora
+eos
+goteria
+menari_btwifi
+menari_lte
+r11
+r11btwifi
+seluna
+solios

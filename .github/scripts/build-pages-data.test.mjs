@@ -2,6 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { parseDateKey, compareBuildIds, parseUrlFile, buildOutput, fetchPartUrlMap, loadMetadata, FACTORY_RE, OTA_RE } from './build-pages-data.mjs';
+import { readFileSync } from 'node:fs';
 import { parseRows } from './scrape-metadata.mjs';
 
 // ── parseDateKey ─────────────────────────────────────────────────────────────
@@ -157,38 +158,54 @@ test('buildOutput: falls back to Google URL when repo is empty', () => {
 
 test('buildOutput: sharded entry uses part URL array', () => {
   const factory = [{ device: 'tokay', buildId: 'ad1a.240530.030', url: F('tokay','ad1a.240530.030') }];
+  const base = 'https://github.com/owner/repo/releases/download/firmware-tokay-factory/tokay-ad1a.240530.030-factory-abcd1234.zip';
+  const urls = [base + '.part01', base + '.part02', base + '.sha256'];
   const partMap = new Map([
-    ['tokay:factory:ad1a.240530.030', [
-      'https://github.com/owner/repo/releases/download/firmware-tokay-factory/tokay-ad1a.240530.030-factory-abcd1234.zip.part01',
-      'https://github.com/owner/repo/releases/download/firmware-tokay-factory/tokay-ad1a.240530.030-factory-abcd1234.zip.part02',
-      'https://github.com/owner/repo/releases/download/firmware-tokay-factory/tokay-ad1a.240530.030-factory-abcd1234.zip.sha256',
-    ]],
+    ['tokay:factory:ad1a.240530.030', {
+      urls,
+      fileName: 'tokay-ad1a.240530.030-factory-abcd1234.zip',
+      parts: [
+        { n: 1, url: urls[0], size: 100, name: 'tokay.zip.part01' },
+        { n: 2, url: urls[1], size: 100, name: 'tokay.zip.part02' },
+      ],
+      expectedSize: 200,
+      manifestUrl: urls[2],
+    }],
   ]);
   const out = buildOutput(factory, [], {}, { generatedAt: 'T', sourceRevision: 'abc' }, 'owner/repo', partMap);
   const entry = out.devices.tokay.factory[0];
   assert.equal(entry[0], 'ad1a.240530.030');
-  assert.ok(Array.isArray(entry[1]));
-  assert.equal(entry[1].length, 3);
-  assert.ok(entry[1][2].endsWith('.sha256'));
-  // metadata fields present (null when no metadata map supplied)
+  assert.deepEqual(entry[1], urls);
   assert.equal(entry[2], null);
   assert.equal(entry[3], null);
 });
 
-test('buildOutput: sharded array part URLs sorted numerically', () => {
-  const factory = [{ device: 'tokay', buildId: 'ad1a.240530.030', url: F('tokay','ad1a.240530.030') }];
-  const partMap = new Map([
-    ['tokay:factory:ad1a.240530.030', [
-      'https://github.com/r/releases/download/t/tokay.zip.part01',
-      'https://github.com/r/releases/download/t/tokay.zip.part02',
-      'https://github.com/r/releases/download/t/tokay.zip.sha256',
-    ]],
-  ]);
-  const out = buildOutput(factory, [], {}, {}, 'owner/repo', partMap);
-  const urls = out.devices.tokay.factory[0][1];
-  assert.ok(urls[0].endsWith('.part01'));
-  assert.ok(urls[1].endsWith('.part02'));
-  assert.ok(urls[2].endsWith('.sha256'));
+test('fetchPartUrlMap: parts sorted numerically, manifest appended last', async () => {
+  const base = 'https://github.com/r/releases/download/firmware-tokay-factory/tokay-ad1a.240530.030-factory-abcd1234.zip';
+  const releases = [{
+    tag_name: 'firmware-tokay-factory',
+    assets: [
+      { name: 'tokay-ad1a.240530.030-factory-abcd1234.zip.sha256', browser_download_url: base + '.sha256', size: 64 },
+      { name: 'tokay-ad1a.240530.030-factory-abcd1234.zip.part10', browser_download_url: base + '.part10', size: 10 },
+      { name: 'tokay-ad1a.240530.030-factory-abcd1234.zip.part02', browser_download_url: base + '.part02', size: 20 },
+      { name: 'tokay-ad1a.240530.030-factory-abcd1234.zip.part01', browser_download_url: base + '.part01', size: 30 },
+    ],
+  }];
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response(JSON.stringify(releases), { status: 200 });
+  try {
+    const partMap = await fetchPartUrlMap('owner/repo');
+    const shard = partMap.get('tokay:factory:ad1a.240530.030');
+    assert.ok(shard, 'expected a shard entry');
+    assert.deepEqual(shard.urls, [base + '.part01', base + '.part02', base + '.part10', base + '.sha256']);
+    assert.equal(shard.expectedSize, 60);
+
+    const factory = [{ device: 'tokay', buildId: 'ad1a.240530.030', url: F('tokay','ad1a.240530.030') }];
+    const out = buildOutput(factory, [], {}, {}, 'owner/repo', partMap);
+    assert.deepEqual(out.devices.tokay.factory[0][1], shard.urls);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });
 
 test('buildOutput: non-sharded entry has checksum and flashUrl at indices 2 and 3', () => {
@@ -306,4 +323,18 @@ test('buildOutput: omitting metadataMap parameter defaults to empty (backward co
   assert.equal(entry.length, 4);
   assert.equal(entry[2], null);
   assert.equal(entry[3], null);
+});
+
+// ── shell/JS regex parity ────────────────────────────────────────────────────
+
+test('shell url patterns match the JS canonical patterns', () => {
+  const shell = readFileSync(new URL('./lib/url-patterns.sh', import.meta.url), 'utf8');
+  const grab = (name) => {
+    const m = shell.match(new RegExp(`^readonly ${name}='([^']+)'$`, 'm'));
+    assert.ok(m, `${name} not found in lib/url-patterns.sh`);
+    return m[1];
+  };
+  const unescapeSlashes = (s) => s.replaceAll('\\/', '/');
+  assert.equal(unescapeSlashes(FACTORY_RE.source), grab('FACTORY_RE'));
+  assert.equal(unescapeSlashes(OTA_RE.source), grab('OTA_RE'));
 });

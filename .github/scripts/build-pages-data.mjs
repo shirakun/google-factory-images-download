@@ -1,10 +1,8 @@
 // .github/scripts/build-pages-data.mjs
 // Parses FactoryImages.txt + FullOTAImages.txt → site/data.json
 //
-// Canonical URL regexes — keep in sync with:
-//   .github/scripts/extract-changed-devices.sh
-//   .github/scripts/publish-firmware.sh
-//   .github/scripts/update-url-lists.sh
+// Canonical URL regexes. Shell consumers source .github/scripts/lib/url-patterns.sh,
+// and build-pages-data.test.mjs asserts both sides stay identical.
 import { readFileSync, writeFileSync, renameSync, existsSync, mkdirSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';

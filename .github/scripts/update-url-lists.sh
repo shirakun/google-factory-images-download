@@ -11,15 +11,15 @@ readonly DRIVERS_URL='https://developers.google.com/android/drivers'
 readonly WATCH_FACTORY_URL='https://developers.google.com/android/images-watch'
 readonly WATCH_OTA_URL='https://developers.google.com/android/ota-watch'
 
-readonly FACTORY_RE='^https://dl\.google\.com/dl/android/aosp/([a-z0-9._]+)-([A-Za-z0-9._]+)-factory-([0-9a-f]{8})\.zip$'
-readonly OTA_RE='^https://dl\.google\.com/dl/android/aosp/([a-z0-9._]+)-ota-([A-Za-z0-9._]+)-([0-9a-f]{8})\.zip$'
-readonly DRIVERS_RE='^https://dl\.google\.com/dl/android/aosp/[a-z0-9_]+-[A-Za-z0-9._-]+-[0-9a-f]{8}\.tgz$'
+# shellcheck source=lib/url-patterns.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/url-patterns.sh"
 
 readonly MIN_FACTORY=100
 readonly MIN_OTA=100
 readonly MIN_DRIVERS=50
 readonly MIN_WATCH_FACTORY=140
 readonly MIN_WATCH_OTA=140
+readonly MIN_WATCH_DEVICES=5
 
 TMPDIR=""
 
@@ -72,6 +72,20 @@ validate() {
   log "$label: $count URLs validated"
 }
 
+extract_devices() {
+  local file line
+  for file in "$@"; do
+    while IFS= read -r line || [[ -n "$line" ]]; do
+      line="${line%$'\r'}"
+      if [[ "$line" =~ $FACTORY_RE ]]; then
+        echo "${BASH_REMATCH[1]}"
+      elif [[ "$line" =~ $OTA_RE ]]; then
+        echo "${BASH_REMATCH[1]}"
+      fi
+    done < "$file"
+  done
+}
+
 atomic_replace() {
   local src="$1" dst="$2"
   if diff -q "$src" "$dst" >/dev/null 2>&1; then
@@ -113,9 +127,25 @@ main() {
   scrape "$DRIVERS_URL" 'https://dl\.google\.com/dl/android/aosp/[^"]+\.tgz' "$TMPDIR/drivers.txt" "DriverBinaries"
   validate "$TMPDIR/drivers.txt" "$DRIVERS_RE" "$MIN_DRIVERS" "DriverBinaries"
 
+  log "Collecting watch device codenames..."
+  extract_devices "$TMPDIR/factory_watch.txt" "$TMPDIR/ota_watch.txt" \
+    | LC_ALL=C sort -u > "$TMPDIR/watch_devices.txt"
+
+  local watch_count invalid_devices
+  watch_count=$(wc -l < "$TMPDIR/watch_devices.txt")
+  if (( watch_count < MIN_WATCH_DEVICES )); then
+    fatal "WatchDevices: only $watch_count device codenames (minimum $MIN_WATCH_DEVICES required)"
+  fi
+  invalid_devices=$(grep -cvE '^[a-z0-9._]+$' "$TMPDIR/watch_devices.txt" || true)
+  if (( invalid_devices > 0 )); then
+    fatal "WatchDevices: $invalid_devices invalid codenames"
+  fi
+  log "WatchDevices: $watch_count device codenames validated"
+
   atomic_replace "$TMPDIR/factory.txt" "FactoryImages.txt"
   atomic_replace "$TMPDIR/ota.txt" "FullOTAImages.txt"
   atomic_replace "$TMPDIR/drivers.txt" "DriverBinaries.txt"
+  atomic_replace "$TMPDIR/watch_devices.txt" "WatchDevices.txt"
 
   log "Building firmware metadata sidecar..."
   node --input-type=module <<NODEEOF
@@ -139,4 +169,6 @@ NODEEOF
   log "Done"
 }
 
-main "$@"
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+  main "$@"
+fi

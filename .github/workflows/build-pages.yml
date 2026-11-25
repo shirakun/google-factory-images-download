@@ -20,12 +20,15 @@ on:
       - 'site/pages-routes.json'
       - 'site/wrangler.jsonc'
       - 'site/device-release-dates.json'
+      - 'site/device-names.json'
       - 'site/package.json'
       - 'site/package-lock.json'
       - 'site/angular.json'
       - 'site/tsconfig*.json'
       - '.github/scripts/build-pages-data.mjs'
       - '.github/scripts/validate-data.mjs'
+      - '.github/scripts/build-pages-data.test.mjs'
+      - '.github/scripts/lib/url-patterns.sh'
       - '.github/workflows/build-pages.yml'
   workflow_dispatch:
 
@@ -47,6 +50,9 @@ jobs:
           CHECKOUT_TOKEN: ${{ secrets.RELEASE_TOKEN || github.token }}
         run: |
           git clone "https://x-access-token:${CHECKOUT_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" .
+
+      - name: Run unit tests
+        run: node --test .github/scripts/*.test.mjs
 
       - name: Build data.json
         env:

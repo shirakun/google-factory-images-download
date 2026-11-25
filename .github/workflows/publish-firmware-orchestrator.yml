@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
     inputs:
       device_override:
-        description: 'Single device or device:type pair (e.g. "sailfish" or "sailfish:factory"). Empty = all devices from diff or full scan'
+        description: 'Single device or device:type pair (e.g. "sailfish" or "sailfish:factory"). Empty = full scan of all devices (backfill); ignored on push'
         required: false
         default: ''
         type: string
@@ -50,53 +50,14 @@ jobs:
           BEFORE_SHA: ${{ github.event.before }}
           AFTER_SHA: ${{ github.sha }}
         run: |
-          chmod +x .github/scripts/extract-changed-devices.sh
-
-          requested_type=""
-          if [[ "$DEVICE_OVERRIDE" =~ ^([a-z0-9._]+):(factory|ota)$ ]]; then
-            devices_json="$(jq -cn --arg device "${BASH_REMATCH[1]}" '[$device]')"
-            requested_type="${BASH_REMATCH[2]}"
-          elif [[ "$DEVICE_OVERRIDE" =~ ^[a-z0-9._]+$ ]]; then
-            devices_json="$(jq -cn --arg device "$DEVICE_OVERRIDE" '[$device]')"
-          elif [[ -n "$DEVICE_OVERRIDE" ]]; then
-            echo "Invalid device_override: '$DEVICE_OVERRIDE'. Expected DEVICE or DEVICE:factory|ota" >&2
-            exit 1
-          elif [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
-            devices_json="$(.github/scripts/extract-changed-devices.sh --all)"
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            if [[ -n "$DEVICE_OVERRIDE" ]]; then
+              bash .github/scripts/build-device-matrix.sh --device "$DEVICE_OVERRIDE" --github-output
+            else
+              bash .github/scripts/build-device-matrix.sh --all --github-output
+            fi
           else
-            devices_json="$(.github/scripts/extract-changed-devices.sh "$BEFORE_SHA" "$AFTER_SHA")"
-          fi
-
-          factory_devices_json=$(sed -nE 's#^https://dl\.google\.com/dl/android/aosp/([a-z0-9._]+)-[A-Za-z0-9._]+-factory-[0-9a-f]{8}\.zip\r?$#\1#p' FactoryImages.txt | LC_ALL=C sort -u | jq -Rsc 'split("\n") | map(select(length > 0))')
-          ota_devices_json=$(sed -nE 's#^https://dl\.google\.com/dl/android/aosp/([a-z0-9._]+)-ota-[A-Za-z0-9._]+-[0-9a-f]{8}\.zip\r?$#\1#p' FullOTAImages.txt | LC_ALL=C sort -u | jq -Rsc 'split("\n") | map(select(length > 0))')
-
-          matrix="$(jq -cn \
-            --argjson devices        "$devices_json" \
-            --argjson factory_devices "$factory_devices_json" \
-            --argjson ota_devices     "$ota_devices_json" \
-            --arg     requested_type  "$requested_type" \
-            '{
-              include: [
-                $devices[] as $device
-                | ["factory", "ota"][] as $type
-                | select($requested_type == "" or $type == $requested_type)
-                | select(
-                    if $type == "factory"
-                    then ($factory_devices | index($device)) != null
-                    else ($ota_devices     | index($device)) != null
-                    end
-                  )
-                | {device: $device, type: $type}
-              ]
-            }')"
-          count=$(jq '.include | length' <<< "$matrix")
-
-          echo "Detected device/type pairs ($count)"
-          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
-          echo "count=$count" >> "$GITHUB_OUTPUT"
-
-          if [[ "$count" == "0" ]]; then
-            echo "No new devices detected -- skipping publish-device job"
+            bash .github/scripts/build-device-matrix.sh --changed "$BEFORE_SHA" "$AFTER_SHA" --github-output
           fi
 
   publish-device:

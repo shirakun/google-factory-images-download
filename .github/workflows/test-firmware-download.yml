@@ -58,8 +58,10 @@ jobs:
           FIRMWARE_URL: ${{ steps.extract.outputs.url }}
         run: |
           set -euo pipefail
-          PATTERN='^https://dl\.google\.com/dl/android/aosp/[A-Za-z0-9._-]+-factory-[0-9a-f]{8}\.zip$'
-          if ! echo "$FIRMWARE_URL" | grep -qE "$PATTERN"; then
+          # Single source of truth for the URL shape (checked against the JS regex by unit tests).
+          # shellcheck source=lib/url-patterns.sh
+          source .github/scripts/lib/url-patterns.sh
+          if [[ ! "$FIRMWARE_URL" =~ $FACTORY_RE ]]; then
             echo "::error::URL does not match expected factory image pattern"
             echo "RESULT=input_error" >> "$GITHUB_ENV"
             echo "RESULT_DETAIL=Invalid URL pattern" >> "$GITHUB_ENV"

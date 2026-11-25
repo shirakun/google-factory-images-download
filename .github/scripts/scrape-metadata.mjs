@@ -1,6 +1,6 @@
 // .github/scripts/scrape-metadata.mjs
-// Reads HTML of one Google Android developer page from stdin.
-// Outputs a JSON object: { [sourceUrl: string]: { checksum: string|null, flashUrl: string|null } }
+// Turns one Google Android developer page's HTML into
+// { [sourceUrl: string]: { checksum: string|null, flashUrl: string|null } }.
 //
 // Row shapes observed on 2026-07-30:
 //   Factory (with Flash)  : Version | Flash anchor | Download anchor | SHA-256
@@ -9,9 +9,6 @@
 //
 // Parse strategy: locate each <tr> containing a dl.google.com firmware anchor;
 // extract fields by anchor hostname, not by column index, to handle both row shapes.
-
-import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
 
 const DL_HREF_RE  = /href="(https:\/\/dl\.google\.com\/dl\/android\/aosp\/[^"]+\.zip)"/;
 const FLASH_HREF_RE = /href="(https:\/\/flash\.android\.com\/[^"]+)"/;
@@ -36,13 +33,4 @@ export function parseRows(html) {
     };
   }
   return result;
-}
-
-// Only run when executed directly (not when imported by tests)
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const inputPath = process.argv[2];
-  const html = inputPath
-    ? readFileSync(inputPath, 'utf8')
-    : readFileSync('/dev/stdin', 'utf8');
-  process.stdout.write(JSON.stringify(parseRows(html)));
 }
