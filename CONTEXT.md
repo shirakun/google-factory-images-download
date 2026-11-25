@@ -28,6 +28,10 @@ _Avoid_: backup, cache, storage
 The single, unsplit ZIP that Google publishes on `dl.google.com` for a firmware entry.
 _Avoid_: upstream file, source file, raw file
 
+**Watch device**:
+A firmware entry whose codename is listed in `WatchDevices.txt`; the browser groups these under the watch tabs.
+_Avoid_: wearable, watch model
+
 **Sharded entry**:
 A firmware entry whose Mirror copy is split into parts because it exceeds GitHub's per-asset size limit.
 _Avoid_: split file, multi-part entry

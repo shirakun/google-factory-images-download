@@ -4,12 +4,6 @@
 //         Pixel Watch: https://developers.google.com/android/images-watch
 // To add a new device: append its codename and YYYY-MM launch month.
 
-/** Pixel Watch codenames — used to split the phone and watch device tabs. */
-export const WATCH_CODENAMES: ReadonlySet<string> = new Set([
-  'aurora', 'eos', 'menari_btwifi', 'menari_lte',
-  'r11', 'r11btwifi', 'seluna', 'solios',
-]);
-
 export const DEVICE_RELEASE_DATES: Readonly<Record<string, string>> = {
   'stallion':   '2026-03', // Pixel 10a
   'menari_btwifi': '2025-10', // Pixel Watch 4 (Bluetooth/Wi-Fi)

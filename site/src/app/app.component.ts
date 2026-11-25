@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, signal, computed, effect, afterNextRender, Injector, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { DEVICE_RELEASE_DATES, WATCH_CODENAMES, releaseDateKey } from './device-release-dates';
+import { DEVICE_RELEASE_DATES, releaseDateKey } from './device-release-dates';
 import { buildBashMergeCommand, buildPowerShellMergeCommand, getMergedFileName } from './firmware-merge/merge-command';
 
 // Tasks 1.1 – 1.2
@@ -32,6 +32,7 @@ type FwEntry = LegacyFwEntry | EnrichedFwEntry;
 
 interface DeviceEntry {
   name: string;
+  watch?: boolean;
   factory: EnrichedFwEntry[];
   ota: EnrichedFwEntry[];
 }
@@ -81,8 +82,8 @@ export class AppComponent implements OnInit, OnDestroy {
     if (!d) return [];
     const cat = this.activeCategory;
     return Object.entries(d.devices)
-      .filter(([codename, dev]) =>
-        WATCH_CODENAMES.has(codename) === cat.isWatch &&
+      .filter(([, dev]) =>
+        (dev.watch === true) === cat.isWatch &&
         dev[cat.dataKey].length > 0
       )
       .sort((a, b) => {
@@ -116,13 +117,14 @@ export class AppComponent implements OnInit, OnDestroy {
       generatedAt: string;
       sourceRevision: string;
       counts: { devices: number; factory: number; ota: number };
-      devices: Record<string, { name: string; factory: FwEntry[]; ota: FwEntry[] }>;
+      devices: Record<string, { name: string; watch?: boolean; factory: FwEntry[]; ota: FwEntry[] }>;
     }>('./assets/data.json').subscribe({
       next: raw => {
         const devices: Record<string, DeviceEntry> = {};
         for (const [code, dev] of Object.entries(raw.devices)) {
           devices[code] = {
             name: dev.name,
+            watch: dev.watch === true,
             factory: dev.factory.map(normEntry),
             ota:     dev.ota.map(normEntry),
           };

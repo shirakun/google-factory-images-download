@@ -327,6 +327,16 @@ test('buildOutput: omitting metadataMap parameter defaults to empty (backward co
   assert.equal(entry[3], null);
 });
 
+test('buildOutput: marks watch codenames from WatchDevices.txt', () => {
+  const factory = [
+    { device: 'goteria', buildId: 'cd5a.260611.008', url: F('goteria', 'cd5a.260611.008') },
+    { device: 'akita',   buildId: 'bp3a.251105.015', url: F('akita', 'bp3a.251105.015') },
+  ];
+  const out = buildOutput(factory, [], {}, {}, '', new Map(), new Map(), new Set(['goteria']));
+  assert.equal(out.devices.goteria.watch, true);
+  assert.equal(out.devices.akita.watch, false);
+});
+
 // ── mirror asset check ───────────────────────────────────────────────────────
 
 test('findMissingAssets: reports a bare link that has no Release asset', () => {

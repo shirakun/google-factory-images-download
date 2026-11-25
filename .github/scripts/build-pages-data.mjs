@@ -207,7 +207,8 @@ export function mergeNameMaps(generatedNames, manualNames) {
 // Builds the data.json output object from parsed entries + name map.
 // repo: GITHUB_REPOSITORY value; when set, constructs GitHub Release URLs deterministically.
 // partUrlMap: Map from fetchPartUrlMap — sharded entries get an array of part+manifest URLs.
-export function buildOutput(factoryEntries, otaEntries, nameMap, meta = {}, repo = '', partUrlMap = new Map(), metadataMap = new Map()) {
+// watchCodenames: codenames listed in WatchDevices.txt; they drive the watch tabs.
+export function buildOutput(factoryEntries, otaEntries, nameMap, meta = {}, repo = '', partUrlMap = new Map(), metadataMap = new Map(), watchCodenames = new Set()) {
   const devices = {};
 
   const makeEntry = (device, type, buildId, googleUrl) => {
@@ -241,6 +242,7 @@ export function buildOutput(factoryEntries, otaEntries, nameMap, meta = {}, repo
 
   const usedKeys = new Set();
   for (const [codename, dev] of Object.entries(devices)) {
+    dev.watch = watchCodenames.has(codename);
     if (nameMap[codename]) {
       dev.name = `${nameMap[codename]} (${codename})`;
       usedKeys.add(codename);
@@ -312,9 +314,19 @@ async function main() {
   } else {
     console.warn('[WARN] FirmwareMetadata.json not found — checksum and Flash data will be null');
   }
+  const watchPath = resolve(repoRoot, 'WatchDevices.txt');
+  const watchCodenames = new Set(
+    existsSync(watchPath)
+      ? readFileSync(watchPath, 'utf8').split('\n').map(line => line.trim()).filter(Boolean)
+      : []
+  );
+  if (watchCodenames.size === 0) {
+    console.warn('[WARN] WatchDevices.txt missing or empty — every device will be grouped as a phone');
+  }
+
   const output = buildOutput(factoryEntries, otaEntries, nameMap, {
     sourceRevision: process.env.GITHUB_SHA ?? 'local',
-  }, repo, partUrlMap, metadataMap);
+  }, repo, partUrlMap, metadataMap, watchCodenames);
 
   // Warn for any device codename that has no release date entry.
   const releaseDatesPath = resolve(repoRoot, 'site', 'device-release-dates.json');

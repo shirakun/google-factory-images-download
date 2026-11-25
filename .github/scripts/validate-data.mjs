@@ -25,6 +25,8 @@ let googleCount = 0;
 for (const [k, v] of Object.entries(d.devices)) {
   if (!Array.isArray(v.factory) || !Array.isArray(v.ota))
     fail('device ' + k + ' missing factory or ota array');
+  if (typeof v.watch !== 'boolean')
+    fail('device ' + k + ' missing boolean watch flag');
   for (const [type, entries] of [['factory', v.factory], ['ota', v.ota]]) {
     for (const entry of entries) {
       // entry[2]: checksum — null or 64-hex lowercase string
