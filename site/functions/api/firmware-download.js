@@ -62,7 +62,9 @@ export async function onRequest(context) {
     if (!HOP_BY_HOP.has(key.toLowerCase())) headers.set(key, value);
   }
   headers.set('cache-control', 'no-store');
-  if (!headers.has('content-disposition')) {
+  // Google sends a bare `attachment` without a filename; without the explicit
+  // name the browser falls back to the request path ("firmware-download").
+  if (upstream.status === 200 || upstream.status === 206) {
     headers.set('content-disposition', `attachment; filename="${file}"`);
   }
 
