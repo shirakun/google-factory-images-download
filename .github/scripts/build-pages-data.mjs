@@ -85,10 +85,12 @@ export function parseUrlFile(content, regex, label) {
 // Queries GitHub Releases and builds a map of part URLs for sharded firmware entries.
 // Returns Map<"device:type:buildId", {urls, fileName, parts, expectedSize, manifestUrl}>.
 // urls preserves the public data.json shape: .partNN URLs followed by the .sha256 manifest URL.
-// Returns an empty Map when GITHUB_REPOSITORY is not set. Throws when the API is
+// Returns { byKey, assetNames } — byKey maps "device:type:buildId" to part URLs,
+// assetNames is every asset name seen across firmware releases. Returns empty
+// collections when GITHUB_REPOSITORY is not set. Throws when the API is
 // unreachable, so a deploy never links to an asset that cannot exist.
 export async function fetchPartUrlMap(repo) {
-  if (!repo) return new Map();
+  if (!repo) return { byKey: new Map(), assetNames: new Set() };
   const headers = { 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'build-pages-data' };
   if (process.env.GITHUB_TOKEN) headers['Authorization'] = 'token ' + process.env.GITHUB_TOKEN;
 
@@ -99,6 +101,7 @@ export async function fetchPartUrlMap(repo) {
   const buildIdReOta     = /^[a-z0-9._]+-ota-([A-Za-z0-9._]+)-[0-9a-f]{8}\.zip$/;
 
   const map = new Map();
+  const assetNames = new Set();
   let page = 1;
   while (true) {
     let res;
@@ -114,6 +117,7 @@ export async function fetchPartUrlMap(repo) {
     for (const rel of releases) {
       const tm = rel.tag_name.match(/^firmware-([a-z0-9._]+)-(factory|ota)$/);
       if (!tm) continue;
+      for (const asset of rel.assets) assetNames.add(asset.name);
       const [, device, type] = tm;
       const buildIdRe = type === 'factory' ? buildIdReFactory : buildIdReOta;
 
@@ -155,8 +159,29 @@ export async function fetchPartUrlMap(repo) {
     if (releases.length < 100) break;
     page++;
   }
-  console.log(`[INFO] GitHub Releases: ${map.size} sharded entries mapped`);
-  return map;
+  console.log(`[INFO] GitHub Releases: ${map.size} sharded entries mapped, ${assetNames.size} assets seen`);
+  return { byKey: map, assetNames };
+}
+
+// Every URL in data.json must resolve to a Release asset. A bare .zip that only
+// exists as shards means shard detection ran before the publisher finished.
+export function findMissingAssets(output, assetNames) {
+  const problems = [];
+  for (const [device, dev] of Object.entries(output.devices)) {
+    for (const type of ['factory', 'ota']) {
+      for (const [buildId, urls] of dev[type].map(entry => [entry[0], entry[1]])) {
+        for (const url of Array.isArray(urls) ? urls : [urls]) {
+          const name = url.split('/').pop();
+          if (assetNames.has(name)) continue;
+          const hint = assetNames.has(`${name}.part01`)
+            ? ' (asset is sharded but data.json emitted the bare file)'
+            : '';
+          problems.push(`${device}/${type}/${buildId}: missing Release asset ${name}${hint}`);
+        }
+      }
+    }
+  }
+  return problems;
 }
 
 // Reads FirmwareMetadata.json (produced by update-url-lists.sh via scrape-metadata.mjs).
@@ -273,8 +298,9 @@ async function main() {
 
   const repo = process.env.GITHUB_REPOSITORY ?? '';
   let partUrlMap;
+  let assetNames;
   try {
-    partUrlMap = await fetchPartUrlMap(repo);
+    ({ byKey: partUrlMap, assetNames } = await fetchPartUrlMap(repo));
   } catch (e) {
     console.error('[FATAL]', e.message);
     process.exit(1);
@@ -304,6 +330,17 @@ async function main() {
   if (output.counts.devices === 0 || output.counts.factory === 0) {
     console.error('[FATAL] Zero devices or factory entries after build — aborting');
     process.exit(1);
+  }
+
+  if (repo) {
+    const missing = findMissingAssets(output, assetNames);
+    if (missing.length > 0) {
+      console.error(`[FATAL] ${missing.length} mirror URL(s) point at assets that do not exist:`);
+      for (const line of missing.slice(0, 20)) console.error('  ' + line);
+      if (missing.length > 20) console.error(`  ... and ${missing.length - 20} more`);
+      console.error('The publisher has not finished uploading these entries; rebuild after it completes.');
+      process.exit(1);
+    }
   }
 
   const tmp = paths.out + '.tmp';

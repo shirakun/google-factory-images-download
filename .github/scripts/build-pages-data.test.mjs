@@ -1,7 +1,7 @@
 // .github/scripts/build-pages-data.test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseDateKey, compareBuildIds, parseUrlFile, buildOutput, fetchPartUrlMap, loadMetadata, mergeNameMaps, FACTORY_RE, OTA_RE } from './build-pages-data.mjs';
+import { parseDateKey, compareBuildIds, parseUrlFile, buildOutput, fetchPartUrlMap, findMissingAssets, loadMetadata, mergeNameMaps, FACTORY_RE, OTA_RE } from './build-pages-data.mjs';
 import { readFileSync } from 'node:fs';
 import { parseRows } from './scrape-metadata.mjs';
 
@@ -194,9 +194,11 @@ test('fetchPartUrlMap: parts sorted numerically, manifest appended last', async 
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async () => new Response(JSON.stringify(releases), { status: 200 });
   try {
-    const partMap = await fetchPartUrlMap('owner/repo');
+    const { byKey: partMap, assetNames } = await fetchPartUrlMap('owner/repo');
     const shard = partMap.get('tokay:factory:ad1a.240530.030');
     assert.ok(shard, 'expected a shard entry');
+    assert.ok(assetNames.has('tokay-ad1a.240530.030-factory-abcd1234.zip.part01'));
+    assert.ok(assetNames.has('tokay-ad1a.240530.030-factory-abcd1234.zip.sha256'));
     assert.deepEqual(shard.urls, [base + '.part01', base + '.part02', base + '.part10', base + '.sha256']);
     assert.equal(shard.expectedSize, 60);
 
@@ -323,6 +325,42 @@ test('buildOutput: omitting metadataMap parameter defaults to empty (backward co
   assert.equal(entry.length, 4);
   assert.equal(entry[2], null);
   assert.equal(entry[3], null);
+});
+
+// ── mirror asset check ───────────────────────────────────────────────────────
+
+test('findMissingAssets: reports a bare link that has no Release asset', () => {
+  const output = { devices: { tokay: { name: 'Pixel 9', factory: [
+    ['b1', 'https://github.com/o/r/releases/download/firmware-tokay-factory/tokay-b1-factory-aaaaaaaa.zip'],
+  ], ota: [] } } };
+  const problems = findMissingAssets(output, new Set());
+  assert.equal(problems.length, 1);
+  assert.match(problems[0], /missing Release asset tokay-b1-factory-aaaaaaaa\.zip$/);
+});
+
+test('findMissingAssets: flags a bare link that exists only as shards', () => {
+  const output = { devices: { tokay: { name: 'Pixel 9', factory: [
+    ['b1', 'https://github.com/o/r/releases/download/firmware-tokay-factory/tokay-b1-factory-aaaaaaaa.zip'],
+  ], ota: [] } } };
+  const problems = findMissingAssets(output, new Set(['tokay-b1-factory-aaaaaaaa.zip.part01']));
+  assert.equal(problems.length, 1);
+  assert.match(problems[0], /emitted the bare file/);
+});
+
+test('findMissingAssets: passes when every URL exists', () => {
+  const output = { devices: { tokay: { name: 'Pixel 9', factory: [
+    ['b1', 'https://github.com/o/r/releases/download/firmware-tokay-factory/tokay-b1-factory-aaaaaaaa.zip'],
+    ['b2', [
+      'https://github.com/o/r/releases/download/firmware-tokay-factory/tokay-b2-factory-bbbbbbbb.zip.part01',
+      'https://github.com/o/r/releases/download/firmware-tokay-factory/tokay-b2-factory-bbbbbbbb.zip.sha256',
+    ]],
+  ], ota: [] } } };
+  const names = new Set([
+    'tokay-b1-factory-aaaaaaaa.zip',
+    'tokay-b2-factory-bbbbbbbb.zip.part01',
+    'tokay-b2-factory-bbbbbbbb.zip.sha256',
+  ]);
+  assert.deepEqual(findMissingAssets(output, names), []);
 });
 
 // ── name map merge ───────────────────────────────────────────────────────────

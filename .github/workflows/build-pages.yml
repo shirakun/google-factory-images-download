@@ -12,9 +12,6 @@ on:
   push:
     branches: [master]
     paths:
-      - 'FactoryImages.txt'
-      - 'FullOTAImages.txt'
-      - 'FirmwareMetadata.json'
       - 'site/src/**'
       - 'site/functions/**'
       - 'site/pages-routes.json'
@@ -31,6 +28,14 @@ on:
       - '.github/scripts/build-pages-data.test.mjs'
       - '.github/scripts/lib/url-patterns.sh'
       - '.github/workflows/build-pages.yml'
+  # 大文件会被发布器拆成 .partNN，上传要跑几十分钟。若在 URL 列表 push 时立刻
+  # 构建，data.json 会在资产就绪前生成，指向不存在的单文件 Release URL。
+  # 因此列表变化不再直接触发构建，等发布器跑完后再重建；代码类改动仍走 push。
+  workflow_run:
+    workflows: ['Publish Firmware Orchestrator']
+    types: [completed]
+    branches: [master]
+
   workflow_dispatch:
 
 permissions:
