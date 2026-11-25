@@ -5,6 +5,7 @@
 // To add a new device: append its codename and YYYY-MM launch month.
 
 export const DEVICE_RELEASE_DATES: Readonly<Record<string, string>> = {
+  'goteria':    '2026-08', // Pixel Watch 5
   'stallion':   '2026-03', // Pixel 10a
   'menari_btwifi': '2025-10', // Pixel Watch 4 (Bluetooth/Wi-Fi)
   'menari_lte': '2025-10', // Pixel Watch 4 (LTE)
